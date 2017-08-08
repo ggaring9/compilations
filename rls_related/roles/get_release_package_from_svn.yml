@@ -1,0 +1,32 @@
+# owner: releng
+---
+- name: Remove leftovers from previous deployments
+  become: no
+  run_once: yes
+  delegate_to: localhost
+  connection: local
+  file:
+    path: "{{ temp_package_dir }}"
+    state: absent
+  when: inventory_hostname in groups['webservers']
+
+- name: Get release content on the Ansible machine (SVN)
+  become: no
+  run_once: yes
+  delegate_to: localhost
+  connection: local
+  environment:
+    LC_CTYPE: en_US.UTF-8
+  subversion:
+    repo: "{{ svn_url }}"
+    dest: "{{ temp_package_dir }}"
+    username: "{{ svn_username }}"
+    password: "{{ svn_password }}"
+    export: yes
+
+- name: "Synchronise svn release to {{ project }} hosts"
+  synchronize:
+    src: "{{ temp_package_dir }}"
+    dest: "{{ htdocsdir }}/"
+    compress: yes
+    links: yes

@@ -1,0 +1,12 @@
+# owner: releng
+# description: tasks file for CMS Mobile base role deployments
+---
+- name: Flip the symlink
+  file:
+    state: link
+    src:  "{{ htdocsdir }}/"
+    dest: "{{ web_symlink }}"
+    force: yes
+  tags:
+    - symlinks
+  when: inventory_hostname in groups['webservers']

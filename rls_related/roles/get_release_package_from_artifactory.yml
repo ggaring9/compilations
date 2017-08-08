@@ -1,0 +1,65 @@
+# owner: releng
+---
+
+- name: Remove leftovers from previous deployments
+  become: no
+  run_once: yes
+  delegate_to: localhost
+  connection: local
+  file:
+    path: "{{ temp_package_dir }}"
+    state: absent
+
+- name: Create temp dir on ansible machine
+  become: no
+  run_once: yes
+  delegate_to: localhost
+  connection: local
+  file:
+    path: "{{ temp_package_dir }}"
+    state: directory
+
+- name: Get release content on the Ansible machine (Artifactory)
+  become: no
+  run_once: yes
+  delegate_to: localhost
+  connection: local
+  uri:
+    url: "{{ artifact_url }}"
+    dest: "{{ temp_package_dir }}"
+    user: "{{ artifactory_username }}"
+    password: "{{ artifactory_password }}"
+
+- name: Update permissions on the unpacked archive
+  become: no
+  run_once: yes
+  delegate_to: localhost
+  connection: local
+  file:
+    path: "{{ temp_package_dir }}"
+    recurse: yes
+    mode: 0755
+
+- name: "Ensure that targetfolder exists"
+  file:
+    path: "{{ htdocsdir }}"
+    state: directory
+
+- name: "Synchronise artifactory release to {{ project }} hosts"
+  unarchive:
+    src: "{{ temp_package_dir }}{{ artifact_name }}"
+    dest: "{{ htdocsdir }}/"
+
+- name: Remove artifactory release file
+  file:
+    path: "{{ htdocsdir }}/{{ artifact_name }}"
+    state: absent
+
+- name: Reset permissions to {{ apache_user }} on the just copied directory
+  file:
+    path: "{{ htdocsdir }}"
+    state: directory
+    owner: "{{ apache_user }}"
+    group: "{{ apache_group }}"
+    mode: 0755
+    recurse: yes

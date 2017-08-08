@@ -1,0 +1,8 @@
+# owner: releng
+---
+- name: Reset permissions to .htaccess
+  file:
+    path: "{{ htdocsdir }}/.htaccess"
+    owner: "{{ apache_user }}"
+    group: "{{ apache_group }}"
+    mode: 0444

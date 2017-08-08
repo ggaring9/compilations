@@ -1,0 +1,10 @@
+# owner: releng
+---
+- name: Reset permissions to Apache on the just copied directory
+  file:
+    path: "{{ htdocsdir }}"
+    state: directory
+    owner: "{{ apache_user }}"
+    group: "{{ apache_group }}"
+    mode: 0755
+    recurse: yes

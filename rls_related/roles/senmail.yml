@@ -1,0 +1,18 @@
+# owner: releng, systems
+
+# this role task is to send a email.
+# It expects variables:
+# * mailbody
+- name: Send mail notification
+  become: no
+  run_once: true
+  delegate_to: localhost
+  ignore_errors: yes
+  mail:
+    host: "localhost"
+    port: 25
+    to: "{{ deployment_mail_receivers|join(',') }}"
+    subject: "{{ mail_subject }}"
+    body: "{{ lookup('template', './mail.j2') }}"
+    charset: utf8
+    subtype: html

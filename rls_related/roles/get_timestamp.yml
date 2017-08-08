@@ -1,0 +1,5 @@
+# owner: releng
+---
+- name: Generate a timestamp for the whole run
+  command: 'date +%s'
+  register: current_run_timestamp

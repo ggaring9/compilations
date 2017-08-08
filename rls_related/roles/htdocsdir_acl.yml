@@ -1,0 +1,4 @@
+# owner: system, releng
+
+- name: Reset ACL on htdocsdir
+  command: setfacl -Rm group:{{ apache_group }}:rwX "{{ htdocsdir }}"

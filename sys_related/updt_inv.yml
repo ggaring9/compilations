@@ -1,0 +1,14 @@
+# owner: systems
+# file: migrate_to_realm.yml
+# description: Main playbook for migrating 'old' KRB + SSS to realm on CentOS 7 previous installations
+
+- hosts: all
+  gather_facts: yes
+  become: yes
+
+  tasks:
+    - name: Recreate inventories base on what's in Git repository.
+      shell: tower-manage inventory_import --source "{{ item.inventory_file }}" --inventory-name "{{ item.inventory_name }}" --overwrite
+      with_items:
+        - "{{ inventories }}"
+      when: inventories is defined

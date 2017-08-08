@@ -1,0 +1,40 @@
+---
+- hosts: webservers
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Install Extra RPMs
+      include: ../../roles/cms/tasks/extra_rpms.yml
+
+    - name: Get deployment timestamp
+      include: ../../roles/cms/tasks/get_timestamp.yml
+
+    - name: Get release package
+      include: ../../roles/cms/tasks/get_release_package_from_svn.yml
+
+    - name: Push configuration to final hosts
+      include: ../../roles/cms/tasks/copy_configuration_central_registration.yml
+
+    - name: Update configuration on env.php
+      include: ../../roles/cms/tasks/update_env_php.yml
+
+    - name: Restore permssions to new deployment
+      include: ../../roles/cms/tasks/permissions.yml
+
+    - name: Fix permissions on .htaccess
+      include: ../../roles/cms/tasks/update_htaccess_permissions.yml
+
+    - name: Update ACLs on the deployment folder
+      include: ../../roles/cms/tasks/htdocsdir_acl.yml
+
+    - name: Swap the symlink, we're live
+      include: ../../roles/cms/tasks/create_symlink.yml
+
+    # now the deployment is complete
+    # POST deployment tasks
+    - name: Remove old deployment directories (post deployment)
+      include: ../../roles/cms/tasks/remove_old_deployments.yml
+
+    - name: Notify via mail (post deployment)
+      include: ../../roles/cms/tasks/sendmail.yml
+

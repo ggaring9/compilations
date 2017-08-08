@@ -1,0 +1,21 @@
+# owner: releng, systems
+
+- name: Ensure clean up log directory exists
+  file:
+    path: "{{ deployment_log_directory }}"
+    state: directory
+
+- name: Ensure clean up script directory exists
+  file:
+    path: "{{ deployment_cleanup_directory }}"
+    state: directory
+
+# no need to make this script executable, we will call it using:
+# python <script name>
+- name: Ensure clean up script is up to date
+  template:
+    src: cms_deployment_cleanup.py.j2
+    dest: "{{ deployment_cleanup_script }}"
+
+- name: Execute clean up script
+  command: python "{{ deployment_cleanup_script }}"
