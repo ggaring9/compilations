@@ -1,0 +1,20 @@
+FROM debian:stable-slim
+RUN apt-get update
+RUN apt-get -y install git curl php5-curl nodejs php5-cli php-pear
+RUN ln -s /usr/bin/nodejs /usr/bin/node
+RUN mkdir /opt/npm
+WORKDIR /opt/npm
+RUN curl -L -O https://npmjs.org/install.sh
+RUN cat install.sh
+RUN sh install.sh
+RUN git clone https://github.com/Ashwini7/drupal-gitlab-unit-test /opt/tests
+RUN curl -sS https://getcomposer.org/installer | php
+RUN mv composer.phar /usr/local/bin/composer
+WORKDIR /opt/tests
+RUN npm install -g gulp
+RUN npm install
+RUN npm install -g n
+RUN pear install PHP_CodeSniffer
+RUN n stable
+RUN composer install
+RUN which gulp

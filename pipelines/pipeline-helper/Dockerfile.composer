@@ -1,0 +1,10 @@
+FROM composer:1.4.2
+RUN composer global require "hirak/prestissimo:^0.3"
+RUN mkdir -p /composer/cache
+RUN chmod -R 777 /composer
+RUN apk update
+RUN apk add openssh
+RUN mkdir -p /root/.ssh
+VOLUME ["/var/www/html/app"]
+WORKDIR /var/www/html/app
+ENTRYPOINT ["composer"]

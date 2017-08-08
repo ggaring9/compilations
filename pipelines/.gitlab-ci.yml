@@ -1,0 +1,175 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+stages:
+  - tests
+  - package
+  - deploy-dev
+  - integration-tests-development
+  - deploy-test
+  - deploy-staging
+  - staging-signoff
+  - deploy-internal-production
+  - internal-production-signoff
+  - deploy-production
+
+before_script:
+  - export VERSION=$(echo $CI_COMMIT_REF_NAME | sed -E "s/release-v?//g")
+
+create package:
+  stage: package
+  script:
+    - python -u automation/pipeline-helper/run.py --stage package
+  cache:
+    paths:
+      - vendor/
+  artifacts:
+    paths:
+      - "*.tar.gz"
+      - automation/pipeline-helper/deployed/*.jsonl
+    expire_in: 1 day
+  when: manual
+
+static code analysis:
+  stage: tests
+  script:
+    - python -u automation/pipeline-helper/run.py --stage sonarqube
+
+dev:
+  stage: deploy-dev
+  environment:
+    name: development
+    url: https://rodwin.fix.me
+  script:
+    - python -u automation/pipeline-helper/run.py --stage deploy-development
+  when: manual
+  artifacts:
+    paths:
+      - automation/pipeline-helper/deployed/*.jsonl
+
+integration-tests-development:
+  stage: integration-tests-development
+  script:
+    - python -u automation/pipeline-helper/run.py --stage integration-tests-development
+  when: manual
+  artifacts:
+    paths:
+      - automation/pipeline-helper/deployed/*.jsonl
+
+qa:
+  stage: deploy-test
+  environment:
+    name: testing
+    url: https://rodwin.fix.me
+  script:
+    - python -u automation/pipeline-helper/run.py --stage deploy-testing
+  when: manual
+  dependencies:
+    - dev
+  artifacts:
+    paths:
+      - automation/pipeline-helper/deployed/*.jsonl
+  only:
+    - /^working$/
+    - /^release-.*$/
+    - tags
+
+tct:
+  stage: deploy-test
+  environment:
+    name: tct
+    url: https://rodwin.fix.me
+  script:
+    - python -u automation/pipeline-helper/run.py --stage deploy-tct
+  when: manual
+  dependencies:
+    - dev
+  artifacts:
+    paths:
+      - automation/pipeline-helper/deployed/*.jsonl
+  only:
+    - /^working$/
+    - /^release-.*$/
+    - tags
+
+staging:
+  stage: deploy-staging
+  environment:
+    name: staging
+    url: https://rodwin.fix.me
+  script:
+    - python -u automation/pipeline-helper/run.py --stage deploy-uat
+  when: manual
+  dependencies:
+    - qa
+  artifacts:
+    paths:
+      - automation/pipeline-helper/deployed/*.jsonl
+  only:
+    - /^release-.*$/
+    - tags
+
+uat:
+  stage: deploy-staging
+  environment:
+    name: uat
+    url: https://rodwin.fix.me
+  script:
+    - python -u automation/pipeline-helper/run.py --stage deploy-staging
+  when: manual
+  dependencies:
+    - qa
+  artifacts:
+    paths:
+      - automation/pipeline-helper/deployed/*.jsonl
+  only:
+    - /^release-.*$/
+    - tags
+
+staging-signoff:
+  stage: staging-signoff
+  environment:
+    name: staging-signoff
+  script:
+    - python -u automation/pipeline-helper/run.py --stage staging-signoff
+  when: manual
+  dependencies:
+    - staging
+  artifacts:
+    paths:
+      - automation/pipeline-helper/deployed/*.jsonl
+  only:
+    - /^release-.*$/
+    - tags
+
+internal prod:
+  stage: deploy-internal-production
+  environment:
+    name: internal-production
+    url: https://rodwin.fix.me
+  script:
+    - python -u automation/pipeline-helper/run.py --stage deploy-internal-production
+  when: manual
+  dependencies:
+   - staging-signoff
+  artifacts:
+    paths:
+      - automation/pipeline-helper/deployed/*.jsonl
+  only:
+    - /^release-.*$/
+    - tags
+
+production:
+  stage: deploy-production
+  environment:
+    name: production
+    url: https://www.dafabet.com/en/sports-df/
+  script:
+    - python -u automation/pipeline-helper/run.py --stage deploy-production
+  when: manual
+  artifacts:
+    paths:
+      - automation/pipeline-helper/deployed/*.jsonl
+  only:
+    - /^release-.*$/
+    - tags
